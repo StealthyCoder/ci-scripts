@@ -28,7 +28,7 @@ compare_versions() {
 }
 
 export DOCKER_BUILDKIT=1
-BUILDKIT_VERSION="${BUILDKIT_VERSION-v0.10.3}"
+BUILDKIT_VERSION="v0.21.0"
 BUILDX_VERSION=$(docker buildx version | awk '{print $2}')
 echo "BuildKit version: ${BUILDKIT_VERSION}"
 echo "Buildx version: ${BUILDX_VERSION}"
