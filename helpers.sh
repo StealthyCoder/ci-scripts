@@ -86,6 +86,7 @@ function repo_sync_helper {
 }
 
 function repo_sync {
+  wget -qO $(which repo) https://storage.googleapis.com/git-repo-downloads/repo
 	status "Repo syncing sources..."
 
 	if [ -f /secrets/git.http.extraheader ] ; then
