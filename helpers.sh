@@ -94,7 +94,35 @@ function repo_sync {
 		git config --global http.https://${domain}/factories.extraheader "$(cat /secrets/git.http.extraheader)"
 	fi
 
-	repo_sync_helper 1m repo init --repo-rev=v2.35 --no-clone-bundle -u $* ${REPO_INIT_OVERRIDES}
+  mkdir .repo/repo.tmp -p
+  pushd .repo/repo.tmp
+  echo "Init"
+  git init
+  echo "Config"
+  git config remote.origin.url 'https://gerrit.googlesource.com/git-repo'
+  git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+  echo "Fetch"
+  git fetch --progress origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
+  echo "Rev Parse"
+  commit=$(git rev-parse --verify 'refs/tags/v2.54^{commit}')
+  echo "Describe"
+  git describe $commit
+  echo "Tag"
+  git tag -v v2.54 || true
+  echo "Update ref"
+  git update-ref 'refs/heads/default' 'v2.54^0'
+  echo "Config branch"
+  git config branch.default.remote 'origin'
+  git config branch.default.merge 'refs/tags/v2.54'
+  echo "Symbolic Ref"
+  git symbolic-ref 'HEAD' 'refs/heads/default'
+  echo "Read tree"
+  git read-tree --reset -u -v 'HEAD'
+  popd
+  mv .repo/repo.tmp .repo/repo
+  python3 .repo/repo/main.py "--repo-dir=$PWD/.repo" --wrapper-version=2.54 --wrapper-path=$(which repo) -- init --repo-rev=v2.54 --no-clone-bundle -u 'https://source.foundries.io/factories/unleash-the-kraken/lmp-manifest.git' -b 'devel' -m 'unleash-the-kraken.xml' --verbose
+
+  # repo_sync_helper 1m repo init --repo-rev=v2.35 --no-clone-bundle -u $* ${REPO_INIT_OVERRIDES}
 	repo_sync_helper 4m repo sync
 
 	if [ -d "$archive" ] ; then
